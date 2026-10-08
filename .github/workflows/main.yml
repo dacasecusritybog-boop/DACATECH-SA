@@ -1,5 +1,5 @@
 
-name: Compilar APK Android
+name: Compilar APK DACATECH
 
 on:
   workflow_dispatch:
@@ -21,30 +21,31 @@ jobs:
           distribution: temurin
           java-version: '17'
 
+      - name: Extraer proyecto Android
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y unzip
+          unzip -o Cotizaciones-DACATECH-importacion-mejorada.zip
+
       - name: Configurar Android SDK
         uses: android-actions/setup-android@v3
-        with:
-          cmdline-tools-version: 12266719
-          packages: ''
 
-      - name: Aceptar licencias Android
-        run: yes | sdkmanager --licenses || true
-
-      - name: Comprobar estructura
+      - name: Instalar SDK requerido
         run: |
-          ls -la
-          ls -la proj
+          sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
+          yes | sdkmanager --licenses
 
-      - name: Dar permisos a Gradle
-        working-directory: proj
-        run: chmod +x gradlew
+      - name: Configurar Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
 
       - name: Compilar APK
-        working-directory: proj
-        run: ./gradlew assembleDebug --no-daemon
+        working-directory: cotizaciones_work
+        run: gradle assembleDebug --no-daemon
 
       - name: Guardar APK
         uses: actions/upload-artifact@v4
         with:
           name: DACATECH-APK
-          path: proj/app/build/outputs/apk/debug/*.apk
+          path: cotizaciones_work/app/build/outputs/apk/debug/*.apk
